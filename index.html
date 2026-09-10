@@ -1,24 +1,63 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>GYEONGJU BIRDSEYE V1</title>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.7.0/dist/maplibre-gl.css"/>
-<style>html,body,#map{margin:0;width:100%;height:100%;overflow:hidden;background:#0a0d12;font-family:system-ui,-apple-system,sans-serif}.hud{position:absolute;z-index:5;top:14px;left:14px;color:#fff;background:#070a0f99;border:1px solid #ffffff22;border-radius:14px;padding:12px 14px;backdrop-filter:blur(10px)}.hud b{letter-spacing:.15em}.small{font-size:12px;opacity:.75}.clock{font-size:26px;font-weight:800;margin-top:4px}.controls{position:absolute;z-index:5;left:50%;bottom:18px;transform:translateX(-50%);width:min(780px,calc(100% - 30px));background:#070a0fb8;border:1px solid #ffffff22;border-radius:16px;padding:12px;box-sizing:border-box;color:white;backdrop-filter:blur(12px)}.row{display:flex;gap:10px;align-items:center}.row button{background:#232b39;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-weight:700}.row input{width:100%}.hint{font-size:11px;opacity:.66;margin-top:7px;display:flex;justify-content:space-between}.tint{position:absolute;z-index:3;inset:0;pointer-events:none;mix-blend-mode:screen}.shade{position:absolute;z-index:4;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 45%,rgba(0,0,0,.33) 100%)}</style></head>
-<body><div id="map"></div><div id="tint" class="tint"></div><div class="shade"></div>
-<div class="hud"><b>GYEONGJU BIRDSEYE</b><div id="clock" class="clock">06:00</div><div id="phase" class="small">SUNRISE · 경주 중심</div><div id="cam" class="small">ALT 420m · DRONE VIEW</div></div>
-<div class="controls"><div class="row"><button id="play">▶</button><button id="home">경주</button><input id="time" type="range" min="360" max="1200" step="1" value="360"></div><div class="hint"><span>06:00 해돋이</span><span>12:00</span><span>18:00</span><span>20:00 야간</span></div></div>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GYEONGJU BIRDSEYE V2</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.7.0/dist/maplibre-gl.css">
+<style>
+html,body,#map{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0f14;font-family:system-ui,-apple-system,sans-serif}
+#map{position:absolute;inset:0}
+.fx{position:absolute;inset:0;pointer-events:none}
+#sky{z-index:2;mix-blend-mode:screen}
+#vig{z-index:4;background:radial-gradient(circle at center,transparent 50%,rgba(0,0,0,.34))}
+#sun{position:absolute;z-index:3;width:64px;height:64px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);background:#fff0b0;box-shadow:0 0 28px 12px #ffb95f88,0 0 95px 35px #ff8e452d}
+.hud{position:absolute;z-index:6;top:14px;left:14px;color:#fff;background:#070a0fbd;border:1px solid #ffffff24;border-radius:16px;padding:12px 14px;backdrop-filter:blur(12px)}
+.hud b{letter-spacing:.14em}.clock{font-size:29px;font-weight:800}.small{font-size:12px;opacity:.78}.badge{margin-top:6px;font-size:10px;letter-spacing:.1em}
+.controls{position:absolute;z-index:6;left:50%;bottom:12px;transform:translateX(-50%);width:min(860px,calc(100% - 20px));background:#070a0fc7;border:1px solid #ffffff22;border-radius:18px;padding:10px;color:#fff;box-sizing:border-box;backdrop-filter:blur(12px)}
+.row{display:flex;gap:8px;align-items:center}.presets{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px}.presets::-webkit-scrollbar{display:none}
+button{background:#222c3a;color:#fff;border:0;border-radius:10px;padding:9px 11px;font-weight:700;white-space:nowrap}
+button.active{background:#536a8c} input{width:100%}.hint{display:flex;justify-content:space-between;font-size:10px;opacity:.6;margin-top:4px}
+.pad{display:grid;grid-template-columns:42px 42px 42px;gap:5px;margin-right:6px}.pad button{padding:7px 0;font-size:17px}
+.landmark-label{font-size:11px;font-weight:800;color:white;background:#080b10c9;padding:5px 8px;border-radius:10px;border:1px solid #ffffff2c;white-space:nowrap}
+</style></head>
+<body>
+<div id="map"></div><div id="sky" class="fx"></div><div id="sun"></div><div id="vig" class="fx"></div>
+<div class="hud"><b>GYEONGJU BIRDSEYE</b><div id="clock" class="clock">16:30</div><div id="phase" class="small">GOLDEN HOUR · 경주</div><div id="cam" class="small">ALT 310m · PITCH 72°</div><div class="badge">GAME VIEW V2</div></div>
+<div class="controls">
+  <div class="presets"><button data-p="dae">대릉원</button><button data-p="hwang">황리단길</button><button data-p="cheom">첨성대</button><button data-p="wol">월성</button><button id="auto">AUTO FLY</button></div>
+  <div class="row"><div class="pad"><span></span><button id="f">▲</button><span></span><button id="l">◀</button><button id="home">◎</button><button id="r">▶</button><span></span><button id="b">▼</button><span></span></div><div style="flex:1"><div class="row"><button id="play">▶ 시간</button><input id="time" type="range" min="330" max="1260" value="990"></div><div class="hint"><span>05:30</span><span>12:00</span><span>18:00</span><span>21:00</span></div></div></div>
+</div>
 <script type="module">
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.7.0/dist/maplibre-gl.mjs';
-const center=[129.211,35.842];
-const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center,zoom:15.4,pitch:67,bearing:-24,antialias:true,maxPitch:85});
-map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+const HOME=[129.2104,35.8376];
+const P={dae:{center:[129.2106,35.8383],zoom:16.55,bearing:-22,pitch:72},hwang:{center:[129.2081,35.8399],zoom:16.8,bearing:12,pitch:70},cheom:{center:[129.2192,35.8347],zoom:17,bearing:-42,pitch:73},wol:{center:[129.2218,35.8325],zoom:16.65,bearing:-30,pitch:71}};
+const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/positron',center:HOME,zoom:16.3,pitch:72,bearing:-24,antialias:true,maxPitch:82});
+function circle(lng,lat,rx,ry,n=36){let a=[];for(let i=0;i<=n;i++){let t=i/n*Math.PI*2;a.push([lng+Math.cos(t)*rx,lat+Math.sin(t)*ry])}return a}
+function rect(lng,lat,dx,dy){return [[lng-dx,lat-dy],[lng+dx,lat-dy],[lng+dx,lat+dy],[lng-dx,lat+dy],[lng-dx,lat-dy]]}
+const LM={type:'FeatureCollection',features:[
+{type:'Feature',properties:{k:'m',h:11},geometry:{type:'Polygon',coordinates:[circle(129.21055,35.83768,.00040,.00026)]}},
+{type:'Feature',properties:{k:'m',h:8},geometry:{type:'Polygon',coordinates:[circle(129.2112,35.8382,.00028,.00022)]}},
+{type:'Feature',properties:{k:'m',h:7},geometry:{type:'Polygon',coordinates:[circle(129.20995,35.8387,.00023,.00018)]}},
+{type:'Feature',properties:{k:'t',h:13},geometry:{type:'Polygon',coordinates:[rect(129.21919,35.83472,.000035,.000035)]}},
+{type:'Feature',properties:{k:'h',h:6},geometry:{type:'Polygon',coordinates:[rect(129.2218,35.8325,.00028,.00010)]}}
+]};
 map.on('load',()=>{
-  const layers=map.getStyle().layers||[];
-  const label=layers.find(l=>l.type==='symbol')?.id;
-  if(!map.getLayer('gyeongju-3d')) map.addLayer({id:'gyeongju-3d',source:'openmaptiles',sourceLayer:'building',type:'fill-extrusion',minzoom:13,paint:{'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],['get','height'],8],0,'#bbb7ae',15,'#d2c6b1',40,'#b8b3aa'],'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],8],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':0.82}},label);
+ const layers=map.getStyle().layers||[];
+ for(const x of layers){if(x.type==='symbol')map.setLayoutProperty(x.id,'visibility','none');if(x.type==='line'&&/rail|transit|boundary/i.test(x.id))map.setLayoutProperty(x.id,'visibility','none')}
+ const first=(map.getStyle().layers||[]).find(x=>x.type==='symbol')?.id;
+ map.addLayer({id:'city3d',source:'openmaptiles',sourceLayer:'building',type:'fill-extrusion',minzoom:13,paint:{'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],['get','height'],8],0,'#b7afa1',12,'#c8bfae',35,'#a9a69f'],'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],8],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':.94}},first);
+ map.addSource('landmarks',{type:'geojson',data:LM});
+ map.addLayer({id:'landmark3d',type:'fill-extrusion',source:'landmarks',paint:{'fill-extrusion-color':['match',['get','k'],'m','#69885f','t','#9b8e76','h','#756d5c','#888'],'fill-extrusion-height':['get','h'],'fill-extrusion-opacity':.97}});
+ [['대릉원',129.2106,35.8383],['황리단길',129.2081,35.8399],['첨성대',129.2192,35.8347],['월성',129.2218,35.8325]].forEach(q=>{let e=document.createElement('div');e.className='landmark-label';e.textContent=q[0];new maplibregl.Marker({element:e,anchor:'bottom'}).setLngLat([q[1],q[2]]).addTo(map)});
 });
-const tint=document.getElementById('tint'),clock=document.getElementById('clock'),phase=document.getElementById('phase'),slider=document.getElementById('time');
-function setTime(m){const h=Math.floor(m/60),mm=m%60;clock.textContent=String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');let bg='transparent',f='';if(m<450){phase.textContent='SUNRISE · 경주 중심';bg='radial-gradient(circle at 12% 68%,rgba(255,132,55,.55),rgba(255,191,110,.12) 22%,transparent 48%)'}else if(m<1020){phase.textContent=m<720?'MORNING · 경주 중심':'DAYLIGHT · 경주 중심';bg='linear-gradient(rgba(90,155,255,.08),transparent 45%)'}else if(m<1140){phase.textContent='SUNSET · 경주 중심';bg='radial-gradient(circle at 88% 62%,rgba(255,105,45,.55),rgba(255,170,85,.12) 24%,transparent 50%)'}else{phase.textContent='EVENING · 경주 중심';bg='linear-gradient(rgba(20,28,62,.35),rgba(4,7,18,.48))'}tint.style.background=bg;const br=m<420?.82:m<1080?1:m<1140?.88:.62;document.getElementById('map').style.filter=`brightness(${br}) saturate(${m>1020?1.15:1})`;}
-slider.oninput=e=>setTime(+e.target.value);setTime(+slider.value);
-let run=false,timer;document.getElementById('play').onclick=()=>{run=!run;document.getElementById('play').textContent=run?'⏸':'▶';if(run)timer=setInterval(()=>{let v=+slider.value+2;if(v>1200)v=360;slider.value=v;setTime(v)},90);else clearInterval(timer)};
-document.getElementById('home').onclick=()=>map.flyTo({center,zoom:15.4,pitch:67,bearing:-24,duration:1800});
-let keys={};window.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);function fly(){const z=map.getZoom(),step=0.0005*Math.pow(2,15-z);let c=map.getCenter(),b=map.getBearing()*Math.PI/180;if(keys['w']||keys['arrowup']){c.lng+=Math.sin(b)*step;c.lat+=Math.cos(b)*step}if(keys['s']||keys['arrowdown']){c.lng-=Math.sin(b)*step;c.lat-=Math.cos(b)*step}if(keys['a'])map.rotateTo(map.getBearing()-1,{duration:0});if(keys['d'])map.rotateTo(map.getBearing()+1,{duration:0});if(keys['q'])map.zoomTo(z+.03,{duration:0});if(keys['e'])map.zoomTo(z-.03,{duration:0});map.setCenter(c);requestAnimationFrame(fly)}fly();
+const slider=document.getElementById('time'),clock=document.getElementById('clock'),phase=document.getElementById('phase'),sky=document.getElementById('sky'),sun=document.getElementById('sun'),mapEl=document.getElementById('map'),cam=document.getElementById('cam');
+function time(m){let h=Math.floor(m/60),mm=m%60,t=(m-330)/930;clock.textContent=String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');sun.style.left=(8+84*t)+'%';sun.style.top=(77-Math.sin(Math.PI*t)*64)+'%';let br=1,sat=1,bg='';if(m<420){phase.textContent='SUNRISE · 경주';br=.82;sat=1.08;bg='linear-gradient(#ff9c5b4d,#6e99d11a 40%,transparent 70%)'}else if(m<960){phase.textContent=m<720?'MORNING · 경주':'DAYLIGHT · 경주';br=1.05;bg='linear-gradient(#72afff2b,transparent 45%)'}else if(m<1110){phase.textContent='GOLDEN HOUR · 경주';br=.98;sat=1.12;bg='linear-gradient(#ffb16f38,#ff7d4a16 45%,transparent 72%)'}else{phase.textContent='EVENING · 경주';br=.58;sat=.9;bg='linear-gradient(#1e28558c,#0a0e1e3d 60%,transparent 80%)'}mapEl.style.filter=`brightness(${br}) saturate(${sat}) contrast(1.04)`;sky.style.background=bg;sun.style.opacity=m>1180?.2:1}
+slider.oninput=e=>time(+e.target.value);time(+slider.value);
+map.on('move',()=>{let z=map.getZoom(),alt=Math.round(980/Math.pow(2,z-15));cam.textContent=`ALT ${alt}m · PITCH ${Math.round(map.getPitch())}°`});
+function nudge(d){let c=map.getCenter(),b=map.getBearing()*Math.PI/180,s=.00055*Math.pow(2,15.8-map.getZoom());if(d==='f'){c.lng+=Math.sin(b)*s;c.lat+=Math.cos(b)*s}if(d==='b'){c.lng-=Math.sin(b)*s;c.lat-=Math.cos(b)*s}if(d==='l'){map.easeTo({bearing:map.getBearing()-13,duration:180});return}if(d==='r'){map.easeTo({bearing:map.getBearing()+13,duration:180});return}map.easeTo({center:c,duration:180})}
+f.onclick=()=>nudge('f');b.onclick=()=>nudge('b');l.onclick=()=>nudge('l');r.onclick=()=>nudge('r');home.onclick=()=>map.flyTo({center:HOME,zoom:16.3,pitch:72,bearing:-24,duration:1500});
+document.querySelectorAll('[data-p]').forEach(x=>x.onclick=()=>map.flyTo({...P[x.dataset.p],duration:1800,essential:true}));
+let tr=false,tt;play.onclick=()=>{tr=!tr;play.textContent=tr?'⏸ 시간':'▶ 시간';if(tr)tt=setInterval(()=>{let v=+slider.value+3;if(v>1260)v=330;slider.value=v;time(v)},80);else clearInterval(tt)};
+let ar=false,at,i=0,route=['dae','hwang','cheom','wol'];auto.onclick=()=>{ar=!ar;auto.classList.toggle('active',ar);auto.textContent=ar?'STOP FLY':'AUTO FLY';if(ar){let go=()=>map.flyTo({...P[route[i++%route.length]],duration:5000,essential:true});go();at=setInterval(go,5600)}else clearInterval(at)};
 </script></body></html>
